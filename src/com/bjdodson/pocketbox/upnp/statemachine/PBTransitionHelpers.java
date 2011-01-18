@@ -5,9 +5,13 @@ import java.net.URI;
 
 import org.teleal.cling.support.avtransport.impl.state.AbstractState;
 import org.teleal.cling.support.avtransport.lastchange.AVTransportVariable;
+import org.teleal.cling.support.contentdirectory.DIDLParser;
 import org.teleal.cling.support.model.AVTransport;
+import org.teleal.cling.support.model.DIDLContent;
 import org.teleal.cling.support.model.MediaInfo;
 import org.teleal.cling.support.model.PositionInfo;
+import org.teleal.cling.support.model.Res;
+import org.teleal.cling.support.model.item.Item;
 
 import android.media.MediaPlayer;
 import android.util.Log;
@@ -53,8 +57,24 @@ public class PBTransitionHelpers {
                 new MediaInfo(uri.toString(), metaData)
         );
     	
-    	transport.setPositionInfo(
-                new PositionInfo(1, metaData, uri.toString())
+		long track = 1;
+		String duration = "00:00:00";
+		String relTime = "00:00:00";
+		String absTime = "00:00:00";
+		int relCount = Integer.MAX_VALUE;
+		int absCount = Integer.MAX_VALUE;
+		
+		try {
+			// Exception means no track info available.
+			DIDLContent didl = new DIDLParser().parse(metaData);
+			Item item = didl.getItems().get(0);
+			Res res = item.getFirstResource();
+			duration = res.getDuration();
+		} catch (Exception e) {}
+		
+		transport.setPositionInfo(
+                new PositionInfo(track, duration, metaData,
+                		uri.toString(), relTime, absTime, relCount, absCount)
         );
     	
         transport.getLastChange().setEventedValue(
