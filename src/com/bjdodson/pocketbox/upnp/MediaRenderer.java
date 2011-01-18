@@ -30,6 +30,7 @@ import org.teleal.cling.model.types.UDN;
 import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
 import org.teleal.cling.support.avtransport.impl.AVTransportService;
 import org.teleal.cling.support.connectionmanager.ConnectionManagerService;
+import org.teleal.cling.support.model.AVTransport;
 
 import android.media.MediaPlayer;
 
@@ -50,6 +51,7 @@ public class MediaRenderer implements Runnable {
 	
 	private MediaPlayer mediaPlayer;
 	private AVTransportService avTransportService = null;
+	private AVTransport avTransport = null;
 	private PlaylistManagerService playlistManagerService = null;
 	
 	public static void main(String[] args) throws Exception {
@@ -85,6 +87,14 @@ public class MediaRenderer implements Runnable {
 	
 	public void setMediaPlayer(MediaPlayer mediaPlayer) {
 		this.mediaPlayer = mediaPlayer;
+	}
+	
+	public void setAVTransport(AVTransport transport) {
+		this.avTransport = transport;
+	}
+	
+	public AVTransport getAVTransport() {
+		return this.avTransport;
 	}
 	
 	public static MediaRenderer getInstance() {

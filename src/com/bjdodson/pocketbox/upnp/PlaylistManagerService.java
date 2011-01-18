@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.teleal.cling.binding.annotations.UpnpAction;
 import org.teleal.cling.binding.annotations.UpnpInputArgument;
@@ -16,7 +14,6 @@ import org.teleal.cling.binding.annotations.UpnpStateVariable;
 import org.teleal.cling.binding.annotations.UpnpStateVariables;
 import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
 import org.teleal.cling.support.avtransport.AVTransportException;
-import org.teleal.cling.support.avtransport.impl.AVTransportService;
 
 import android.util.Log;
 
@@ -146,7 +143,6 @@ public class PlaylistManagerService {
 			// TODO: if playlist is an m3u, get its entries.
 			PlaylistEntry e = new PlaylistEntry(uri, metadata);
 			list.add(e);
-			Log.d(TAG, "lis length: " + list.size());
 		}
 		
 		public void clear() {

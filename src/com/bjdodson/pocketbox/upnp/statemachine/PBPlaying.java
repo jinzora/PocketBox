@@ -67,11 +67,12 @@ public class PBPlaying extends Playing<AVTransport> {
 	@Override
 	public Class<? extends AbstractState> next() {
 		Log.d(TAG, "Playing::next called");
-		return PBTransitionHelpers.next(PBPlaying.class);
+		return PBTransitionHelpers.next(this, PBPlaying.class);
 	}
 
 	@Override
 	public Class<? extends AbstractState> pause() {
+		Log.d(TAG, "Playing::pause called");
 		return PBPlaying.class;
 	}
 
@@ -83,11 +84,13 @@ public class PBPlaying extends Playing<AVTransport> {
 
 	@Override
 	public Class<? extends AbstractState> previous() {
+		Log.d(TAG, "Playing::prev called");
 		return PBPlaying.class;
 	}
 
 	@Override
 	public Class<? extends AbstractState> seek(SeekMode unit, String target) {
+		Log.d(TAG, "Playing::seek called");
 		return PBPlaying.class;
 	}
 }

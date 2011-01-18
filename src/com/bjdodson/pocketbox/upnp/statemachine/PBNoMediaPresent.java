@@ -24,6 +24,13 @@ public class PBNoMediaPresent extends NoMediaPresent<AVTransport> {
 	
     public PBNoMediaPresent(AVTransport transport) {
         super(transport);
+        
+        // This is guaranteed to be the first state we see.
+        MediaRenderer renderer = MediaRenderer.getInstance();
+        MediaRenderer.getInstance().setAVTransport(transport);
+        synchronized(renderer) {
+        	renderer.notify();
+        }
     }
 
     @Override
@@ -34,24 +41,10 @@ public class PBNoMediaPresent extends NoMediaPresent<AVTransport> {
     		PlaylistManagerService pmService = MediaRenderer.getInstance().getPlaylistManager();
         	UnsignedIntegerFourBytes instanceId = getTransport().getInstanceId();
     		pmService.setAVTransportURI(instanceId, uri.toString(), metaData);
-    	}
-    	
-    	getTransport().setMediaInfo(
-                new MediaInfo(uri.toString(), metaData)
-        );
-
-        // If you can, you should find and set the duration of the track here!
-        getTransport().setPositionInfo(
-                new PositionInfo(1, metaData, uri.toString())
-        );
-
-        // It's up to you what "last changes" you want to announce to event listeners
-        getTransport().getLastChange().setEventedValue(
-                getTransport().getInstanceId(),
-                new AVTransportVariable.AVTransportURI(uri),
-                new AVTransportVariable.CurrentTrackURI(uri)
-        );
-        
+	
+    		AVTransport transport = getTransport();
+	    	PBTransitionHelpers.setTrackDetails(transport, uri, metaData);
+    	}        
         
     	MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
     	Playlist playlist = MediaRenderer.getInstance().getPlaylistManager().getPlaylist();

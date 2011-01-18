@@ -45,6 +45,9 @@ public class PBStopped extends Stopped<AVTransport> {
     		int position = pmService.getLength(instanceId) - 1;
     		pmService.jumpTo(instanceId, position);
     		
+    		AVTransport transport = getTransport();
+	    	PBTransitionHelpers.setTrackDetails(transport, uri, metaData);
+	    	
     		try {
 	    		MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
 	    		Playlist playlist = pmService.getPlaylist();
@@ -77,7 +80,7 @@ public class PBStopped extends Stopped<AVTransport> {
     @Override
     public Class<? extends AbstractState> next() {
     	Log.d(TAG, "called stop::next");
-    	return PBTransitionHelpers.next(PBStopped.class);
+    	return PBTransitionHelpers.next(this, PBStopped.class);
     }
 
     @Override

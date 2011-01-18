@@ -17,8 +17,14 @@ import org.teleal.cling.model.types.UDN;
 import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
 import org.teleal.cling.support.avtransport.AVTransportException;
 import org.teleal.cling.support.avtransport.impl.AVTransportService;
+import org.teleal.cling.support.avtransport.lastchange.AVTransportVariable;
+import org.teleal.cling.support.model.AVTransport;
+import org.teleal.cling.support.model.MediaInfo;
+import org.teleal.cling.support.model.PositionInfo;
 
 import com.bjdodson.pocketbox.upnp.MediaRenderer;
+import com.bjdodson.pocketbox.upnp.PlaylistManagerService.Playlist;
+import com.bjdodson.pocketbox.upnp.PlaylistManagerService.PlaylistEntry;
 
 import android.content.Context;
 import android.content.Intent;
@@ -89,10 +95,34 @@ public class RenderingService extends AndroidUpnpServiceImpl {
 				new Thread() {
 					public void run() {
 						AVTransportService avTransportService = mMediaRenderer.getAVTransportService();
+						avTransportService.fireLastChange();
+						
+						// Wait for first track to be loaded.
+						AVTransport transport = null;
+						while (transport == null) {
+							synchronized(mMediaRenderer) {
+								try {
+									mMediaRenderer.wait();
+								} catch (InterruptedException e) {}
+							}
+							transport = mMediaRenderer.getAVTransport();
+						}
+						
 						while (mStarted) {
 			            	try {
 			            		Thread.sleep(750);
 			            	} catch (Exception e) {}
+							
+			            	synchronized(mMediaRenderer) {
+			            		try {
+					            	PositionInfo initPositionInfo = mMediaRenderer.getAVTransportService().getPositionInfo(mMediaRenderer.getPlayerInstanceId());
+									int pos = mMediaPlayer.getCurrentPosition();
+									PositionInfo positionInfo = new PositionInfo(initPositionInfo, pos/1000, pos/1000);
+									transport.setPositionInfo(positionInfo);
+			            		} catch (AVTransportException e) {
+			            			Log.w(TAG, "Error updating position info", e);
+			            		}
+			            	}			            	
 			            	avTransportService.fireLastChange();
 			            }
 					};
