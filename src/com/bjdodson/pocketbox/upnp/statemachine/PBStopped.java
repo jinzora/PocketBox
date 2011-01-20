@@ -66,8 +66,7 @@ public class PBStopped extends Stopped<AVTransport> {
     @Override
     public Class<? extends AbstractState> stop() {
     	Log.d(TAG, "called stop::stop");
-        /// Same here, if you are stopped already and someone calls STOP, well...
-        return PBStopped.class;
+        return null;
     }
 
     @Override
@@ -86,13 +85,15 @@ public class PBStopped extends Stopped<AVTransport> {
     @Override
     public Class<? extends AbstractState> previous() {
     	Log.d(TAG, "called stop::prev");
-        return PBStopped.class;
+        return null;
     }
 
     @Override
     public Class<? extends AbstractState> seek(SeekMode unit, String target) {
-    	Log.d(TAG, "called stop::seek");
-        // Implement seeking with the stream in stopped state!
-        return PBStopped.class;
+    	if (unit.equals(SeekMode.REL_TIME)) {
+			MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
+			player.seekTo(PBTransitionHelpers.timeInMS(target));
+		}
+		return null;
     }
 }

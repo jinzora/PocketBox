@@ -119,12 +119,14 @@ public class MediaRenderer implements Runnable {
             // Add the bound local device to the registry
             upnpService.getRegistry().addDevice(createDevice());
             
+            /*
             while (true) {
             	try {
             		Thread.sleep(750);
             	} catch (Exception e) {}
             	avTransportService.fireLastChange();
             }
+            */
 
         } catch (Exception ex) {
             System.err.println("Exception occured: " + ex);

@@ -73,24 +73,27 @@ public class PBPlaying extends Playing<AVTransport> {
 	@Override
 	public Class<? extends AbstractState> pause() {
 		Log.d(TAG, "Playing::pause called");
-		return PBPlaying.class;
+		return null;
 	}
 
 	@Override
 	public Class<? extends AbstractState> play(String speed) {
 		Log.d(TAG, "Playing::play called");
-		return PBPlaying.class;
+		return null;
 	}
 
 	@Override
 	public Class<? extends AbstractState> previous() {
 		Log.d(TAG, "Playing::prev called");
-		return PBPlaying.class;
+		return null;
 	}
 
 	@Override
 	public Class<? extends AbstractState> seek(SeekMode unit, String target) {
-		Log.d(TAG, "Playing::seek called");
-		return PBPlaying.class;
+		if (unit.equals(SeekMode.REL_TIME)) {
+			MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
+			player.seekTo(PBTransitionHelpers.timeInMS(target));
+		}
+		return null;
 	}
 }

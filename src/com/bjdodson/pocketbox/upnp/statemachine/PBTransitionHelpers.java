@@ -83,4 +83,22 @@ public class PBTransitionHelpers {
                 new AVTransportVariable.CurrentTrackURI(uri)
         );
 	}
+	
+	public static int timeInMS(String time) {
+		int t = 0;
+		int i = time.indexOf(".");
+		int mult = 1000;
+		
+		if (i != -1) {
+			t += mult * Float.parseFloat(time.substring(i));
+			time = time.substring(0, i);
+		}
+		String[] parts = time.split(":");
+		for (i = parts.length - 1; i >= 0; i--) {
+			t += Integer.parseInt(parts[i])*mult;
+			mult *= 60;
+		}
+		
+		return t;
+	}
 }
