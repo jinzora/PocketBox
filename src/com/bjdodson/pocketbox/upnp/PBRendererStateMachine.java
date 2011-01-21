@@ -8,6 +8,7 @@ import com.bjdodson.pocketbox.upnp.statemachine.*;
 @States({
         PBNoMediaPresent.class,
         PBStopped.class,
-        PBPlaying.class
+        PBPlaying.class,
+        PBPaused.class
 })
 interface PBRendererStateMachine extends AVTransportStateMachine {}

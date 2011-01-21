@@ -3,7 +3,7 @@ package com.bjdodson.pocketbox.upnp.statemachine;
 import java.net.URI;
 
 import org.teleal.cling.support.avtransport.impl.state.AbstractState;
-import org.teleal.cling.support.avtransport.impl.state.Playing;
+import org.teleal.cling.support.avtransport.impl.state.PausedPlay;
 import org.teleal.cling.support.model.AVTransport;
 import org.teleal.cling.support.model.SeekMode;
 
@@ -13,10 +13,10 @@ import android.util.Log;
 import com.bjdodson.pocketbox.upnp.MediaRenderer;
 import com.bjdodson.pocketbox.upnp.PlaylistManagerService;
 
-public class PBPlaying extends Playing<AVTransport> {
+public class PBPaused extends PausedPlay<AVTransport> {
 	private static final String TAG = "jinzora";
 	
-    public PBPlaying(AVTransport transport) {
+    public PBPaused(AVTransport transport) {
         super(transport);
     }
 
@@ -24,20 +24,11 @@ public class PBPlaying extends Playing<AVTransport> {
     public void onEntry() {
         super.onEntry();
 
-        final MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
-        if (!player.isPlaying()) {
-        	// we are playing if we arrive from Paused state. Otherwise, a track
-        	// has been set for us to play.
-	        new Thread() {
-	        	public void run() {
-	        		try {
-	                	player.prepare(); // playback started in onPrepareListener
-	                } catch (Exception e) {
-	                	Log.e(TAG, "Error playing track", e);
-	                }
-	        	};
-	        }.start();
-        }
+        Log.d(TAG, "pausing track");
+        MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
+    	if (player.isPlaying()) {
+    		player.pause();
+    	}
     }
 
     @Override
@@ -48,7 +39,7 @@ public class PBPlaying extends Playing<AVTransport> {
     		pmService.setAVTransportURI(getTransport().getInstanceId(), uri.toString(), metaData);
     	}
     	
-        return PBPlaying.class;
+        return PBPaused.class;
     }
 
     @Override
@@ -62,31 +53,31 @@ public class PBPlaying extends Playing<AVTransport> {
         return PBStopped.class;
     }
 
-	@Override
 	public Class<? extends AbstractState> next() {
-		Log.d(TAG, "Playing::next called");
-		return PBTransitionHelpers.next(this, PBPlaying.class);
+		Log.d(TAG, "Paused::next called");
+		return PBTransitionHelpers.next(this, PBPaused.class);
 	}
 
-	@Override
 	public Class<? extends AbstractState> pause() {
-		Log.d(TAG, "Playing::pause called");
-		return PBPaused.class;
+		Log.d(TAG, "Paused::pause called");
+		return null;
 	}
 
 	@Override
 	public Class<? extends AbstractState> play(String speed) {
-		Log.d(TAG, "Playing::play called");
-		return null;
+		Log.d(TAG, "Paused::play called");
+		MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
+    	if (!player.isPlaying()) {
+    		player.start();
+    	}
+		return PBPlaying.class;
 	}
 
-	@Override
 	public Class<? extends AbstractState> previous() {
-		Log.d(TAG, "Playing::prev called");
+		Log.d(TAG, "Paused::prev called");
 		return null;
 	}
 
-	@Override
 	public Class<? extends AbstractState> seek(SeekMode unit, String target) {
 		if (unit.equals(SeekMode.REL_TIME)) {
 			MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();
