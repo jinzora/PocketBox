@@ -1,6 +1,11 @@
 package com.bjdodson.pocketbox;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+
+import mobisocial.nfc.Nfc;
+import mobisocial.nfc.Nfc.NdefHandler;
 
 import org.teleal.cling.support.avtransport.AVTransportException;
 
@@ -10,21 +15,27 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.net.Uri;
+import android.nfc.NdefMessage;
+import android.nfc.NdefRecord;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 public class PocketBox extends Activity {
 	public static final String TAG = "pocketbox";
     private boolean mIsBound = false;
     private RenderingService mRenderingService;
+    private Nfc mNfc;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
-        
+        mNfc = new Nfc(this);
+        mNfc.addNdefHandler(mPlaylistHandler);
+
         findViewById(R.id.prevbutton).setOnClickListener(mPrevButton);
         findViewById(R.id.nextbutton).setOnClickListener(mNextButton);
         findViewById(R.id.playbutton).setOnClickListener(mPlayButton);
@@ -102,6 +113,7 @@ public class PocketBox extends Activity {
     @Override
     protected void onResume() {
     	super.onResume();
+    	mNfc.onResume(this);
     	bindService(new Intent(PocketBox.this, 
 	            RenderingService.class), mServiceConnection, Context.BIND_AUTO_CREATE);
 	    mIsBound = true;
@@ -110,7 +122,7 @@ public class PocketBox extends Activity {
     @Override
     protected void onPause() {
     	super.onPause();
-    	
+    	mNfc.onPause(this);
     	if (mIsBound) {
 	        // If we have received the service, and hence registered with
 	        // it, then now is the time to unregister.
@@ -119,6 +131,11 @@ public class PocketBox extends Activity {
 	        unbindService(mServiceConnection);
 	        mIsBound = false;
 	    }
+    }
+    
+    @Override
+    protected void onNewIntent(Intent intent) {
+    	if (mNfc.onNewIntent(this, intent)) return;
     }
     
     public void onServiceReady() {
@@ -135,6 +152,31 @@ public class PocketBox extends Activity {
 			Log.e(TAG, "Error playing playlist", e);
 		}
     }
+    
+    private NdefHandler mPlaylistHandler = new NdefHandler() {
+    	@Override
+		public int handleNdef(NdefMessage[] ndefMessages) {
+    		// TODO: support full ndef uri specification.
+    		// TODO: support direct mime types
+    		NdefRecord record = ndefMessages[0].getRecords()[0];
+    		if (record.getTnf() != NdefRecord.TNF_ABSOLUTE_URI) {
+    			return NDEF_PROPAGATE;
+    		}
+    		
+    		String url = new String(record.getPayload());
+    		if (!url.endsWith(".m3u")) {
+    			return NDEF_PROPAGATE;
+    		}
+
+    		try {
+    			mRenderingService.getMediaRenderer().getPlaylistManager().doPlaylist(new URL(url));
+    		} catch (IOException e) {
+    			Log.e(TAG, "Could not play playlist", e);
+    		}
+
+			return NDEF_CONSUME;
+		}
+	};
     
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 	    public void onServiceConnected(ComponentName className,

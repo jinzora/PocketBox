@@ -28,8 +28,9 @@
 		</service>
     </application>
 
-
+<uses-permission android:name="android.permission.BLUETOOTH"></uses-permission>
 <uses-permission android:name="android.permission.INTERNET"></uses-permission>
+<uses-permission android:name="android.permission.NFC"></uses-permission>
 <uses-permission android:name="android.permission.WAKE_LOCK"></uses-permission>
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE"/>

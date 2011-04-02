@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -62,9 +63,18 @@ public class PlaylistManagerService {
 		return sInstanceId;
 	}
 
-	// Local action
+	// Local actions
+	public void doPlaylist(URL url) throws IOException {
+		URLConnection urlConnection = url.openConnection();
+		doPlaylist(urlConnection.getInputStream());
+	}
+	
 	public void doPlaylist(ContentResolver resolver, Uri playlistUri) throws IOException {
 		InputStream playlistInput = resolver.openInputStream(playlistUri);
+		doPlaylist(playlistInput);
+	}
+	
+	public void doPlaylist(InputStream playlistInput) throws IOException {
 		BufferedReader br = new BufferedReader(new InputStreamReader(playlistInput));
 		String line = null; 
 		String lastLine = null;
