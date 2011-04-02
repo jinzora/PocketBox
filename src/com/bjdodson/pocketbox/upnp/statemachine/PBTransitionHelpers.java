@@ -21,7 +21,7 @@ import com.bjdodson.pocketbox.upnp.PlaylistManagerService;
 import com.bjdodson.pocketbox.upnp.PlaylistManagerService.Playlist;
 
 public class PBTransitionHelpers {
-	public static final String TAG = "jinzora";
+	public static final String TAG = "pocketbox";
 	
 	public static Class<? extends AbstractState> next(AbstractState state, Class<? extends AbstractState> successState) {
 		MediaPlayer player = MediaRenderer.getInstance().getMediaPlayer();

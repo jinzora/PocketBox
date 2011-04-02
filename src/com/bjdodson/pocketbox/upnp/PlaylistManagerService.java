@@ -1,5 +1,10 @@
 package com.bjdodson.pocketbox.upnp;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -15,6 +20,8 @@ import org.teleal.cling.binding.annotations.UpnpStateVariables;
 import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
 import org.teleal.cling.support.avtransport.AVTransportException;
 
+import android.content.ContentResolver;
+import android.net.Uri;
 import android.util.Log;
 
 @UpnpService(
@@ -41,14 +48,70 @@ import android.util.Log;
 })
 
 public class PlaylistManagerService {
-	private static final String TAG = "jinzora";
+	public static final String UNKNOWN_TRACK = "Unknown Track";
+	private static final String TAG = "pocketbox";
 	public static final String META_PLAYLIST_CHANGED = "NOTIFY_AVTRANSPORT_SERVICE";
 	private static UnsignedIntegerFourBytes sInstanceId = new UnsignedIntegerFourBytes(0);
+	private MediaRenderer mMediaRenderer;
 	
+	public PlaylistManagerService(MediaRenderer mediaRenderer) {
+		mMediaRenderer = mediaRenderer;
+	}
+
 	public static UnsignedIntegerFourBytes getPlayerInstanceId() {
 		return sInstanceId;
 	}
 
+	// Local action
+	public void doPlaylist(ContentResolver resolver, Uri playlistUri) throws IOException {
+		InputStream playlistInput = resolver.openInputStream(playlistUri);
+		BufferedReader br = new BufferedReader(new InputStreamReader(playlistInput));
+		String line = null; 
+		String lastLine = null;
+		boolean trackAdded = false;
+		line = br.readLine();
+		while (line != null) {
+			if (line.length() > 0 && line.charAt(0) != '#') {
+				try {
+					URL track = new URL(line);
+					String trackname;
+					
+				    if (lastLine.charAt(0) == '#') {
+				    	int pos;
+				    	if (-1 != (pos = lastLine.indexOf(','))) {
+				    		trackname = lastLine.substring(pos+1,lastLine.length());
+				    	} else {
+				    		trackname = UNKNOWN_TRACK;
+				    	}
+				    } else {
+				    	trackname = UNKNOWN_TRACK;
+				    }
+				    
+				    try {
+					    setAVTransportURI(sInstanceId, track.toString(), null);
+					    getPlaylist().add(track.toString(), null);
+					    trackAdded = true;
+				    } catch (Exception e) {
+				    	Log.e(TAG, "Error playing track", e);
+				    }
+				} catch (Exception e) {
+					// probably a comment line
+				}
+			}
+			
+			lastLine = line;
+			line = br.readLine();
+		}
+		if (trackAdded) {
+			try {
+				// TODO: only play if we are stopped / paused.
+				mMediaRenderer.getAVTransportService().play(MediaRenderer.getPlayerInstanceId(), null);
+			} catch (AVTransportException e) {
+				Log.e(TAG, "Error playing media", e);
+			}
+		}
+	}
+	
 	@UpnpAction
     public void clear(@UpnpInputArgument(name = "InstanceID") UnsignedIntegerFourBytes instanceId) {
 		Log.d(TAG, "playlistManager::clear called");

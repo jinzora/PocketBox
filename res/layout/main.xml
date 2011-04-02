@@ -1,12 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:id="@+id/player"
     >
-<TextView  
-    android:layout_width="fill_parent" 
-    android:layout_height="wrap_content" 
-    android:text="@string/hello"
-    />
+<LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/player_buttons"
+    >
+        
+<Button android:id="@+id/prevbutton" 
+	 	android:text="@+string/previous"
+		android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:drawableTop="@+android:drawable/ic_media_previous"
+/>
+<!-- 
+<Button android:id="@+id/stopbutton" 
+	 	android:text="@+string/stop"
+		android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:drawableTop="@+android:drawable/ic_media_stop"
+/>
+ -->
+ <Button android:id="@+id/pausebutton" 
+	 	android:text="@+string/pause"
+		android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:drawableTop="@+android:drawable/ic_media_pause"
+/>
+<Button android:id="@+id/playbutton" 
+	 	android:text="@+string/play"
+		android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:drawableTop="@+android:drawable/ic_media_play"
+/>
+<Button android:id="@+id/nextbutton" 
+	 	android:text="@+string/next"
+		android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:drawableTop="@+android:drawable/ic_media_next"
+/>
+
+<Button android:id="@+id/clearbutton" 
+	 	android:text="@+string/clear"
+		android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:drawableTop="@+android:drawable/ic_delete"
+/>
+
+</LinearLayout>
+
+
+  <ListView android:id="@android:id/list"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"/>
 </LinearLayout>

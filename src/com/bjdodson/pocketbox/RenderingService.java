@@ -17,14 +17,10 @@ import org.teleal.cling.model.types.UDN;
 import org.teleal.cling.model.types.UnsignedIntegerFourBytes;
 import org.teleal.cling.support.avtransport.AVTransportException;
 import org.teleal.cling.support.avtransport.impl.AVTransportService;
-import org.teleal.cling.support.avtransport.lastchange.AVTransportVariable;
 import org.teleal.cling.support.model.AVTransport;
-import org.teleal.cling.support.model.MediaInfo;
 import org.teleal.cling.support.model.PositionInfo;
 
 import com.bjdodson.pocketbox.upnp.MediaRenderer;
-import com.bjdodson.pocketbox.upnp.PlaylistManagerService.Playlist;
-import com.bjdodson.pocketbox.upnp.PlaylistManagerService.PlaylistEntry;
 
 import android.content.Context;
 import android.content.Intent;
@@ -47,6 +43,8 @@ public class RenderingService extends AndroidUpnpServiceImpl {
 	private final MediaPlayer mMediaPlayer = new MediaPlayer();
 	private final UnsignedIntegerFourBytes PLAYER_INSTANCE_ID = MediaRenderer.getPlayerInstanceId();
 
+	public static final int MSG_PLAY_TRACK = 1;
+
 	LocalDevice createDevice() throws ValidationException,
 			LocalServiceBindingException, IOException {
 
@@ -62,14 +60,24 @@ public class RenderingService extends AndroidUpnpServiceImpl {
 
 		return new LocalDevice(identity, type, details, icon, MediaRenderer.getServices());
 	}
+	
+	public MediaRenderer getMediaRenderer() {
+		return mMediaRenderer;
+	}
+
+	private LocalBinder mLocalBinder = new LocalBinder();
+	public class LocalBinder extends Binder {
+        RenderingService getService() {
+            return RenderingService.this;
+        }
+    }
 
 	@Override
 	public IBinder onBind(Intent arg0) {
 		if (!mStarted) {
 			startService(new Intent(RenderingService.this, RenderingService.class));
 		}
-		//return mMessenger.getBinder();
-		return null;
+		return mLocalBinder;
 	}
 	
 	@Override
@@ -88,9 +96,7 @@ public class RenderingService extends AndroidUpnpServiceImpl {
 			mWifiLock.acquire();
 			try {
 				upnpService.getRegistry().addDevice(createDevice());
-				
 				mStarted = true;
-				Toast.makeText(this, "Started rendering service.", Toast.LENGTH_SHORT).show();
 				
 				new Thread() {
 					public void run() {
@@ -172,7 +178,6 @@ public class RenderingService extends AndroidUpnpServiceImpl {
 		mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 			@Override
 			public void onPrepared(MediaPlayer mp) {
-				Toast.makeText(RenderingService.this, "Starting playback", Toast.LENGTH_SHORT).show();
 				mp.start();
 			}
 		});

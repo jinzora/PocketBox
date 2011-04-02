@@ -108,7 +108,6 @@ public class MediaRenderer implements Runnable {
         try {
 
             final UpnpService upnpService = new UpnpServiceImpl();
-
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 @Override
                 public void run() {
@@ -208,7 +207,7 @@ public class MediaRenderer implements Runnable {
 		/** PlaylistManager **/
 		LocalService<PlaylistManagerService> playlistManagerService =
 	        new AnnotationLocalServiceBinder().read(PlaylistManagerService.class);
-		final PlaylistManagerService playlistManagerImpl = new PlaylistManagerService();
+		final PlaylistManagerService playlistManagerImpl = new PlaylistManagerService(MediaRenderer.getInstance());
 		playlistManagerService.setManager(
 		        new DefaultServiceManager<PlaylistManagerService>(playlistManagerService, null) {
 		        	@Override
