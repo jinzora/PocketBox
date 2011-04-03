@@ -1,6 +1,8 @@
 package com.bjdodson.pocketbox;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 
@@ -8,6 +10,8 @@ import mobisocial.nfc.Nfc;
 import mobisocial.nfc.Nfc.NdefHandler;
 
 import org.teleal.cling.support.avtransport.AVTransportException;
+
+import com.bjdodson.pocketbox.RenderingService.IncomingHandler;
 
 import android.app.Activity;
 import android.content.ComponentName;
@@ -18,7 +22,11 @@ import android.net.Uri;
 import android.nfc.NdefMessage;
 import android.nfc.NdefRecord;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -34,7 +42,8 @@ public class PocketBox extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
         mNfc = new Nfc(this);
-        mNfc.addNdefHandler(mPlaylistHandler);
+        mNfc.addNdefHandler(mHttpPlaylistHandler);
+        mNfc.addNdefHandler(mMimePlaylistHandler);
 
         findViewById(R.id.prevbutton).setOnClickListener(mPrevButton);
         findViewById(R.id.nextbutton).setOnClickListener(mNextButton);
@@ -153,11 +162,10 @@ public class PocketBox extends Activity {
 		}
     }
     
-    private NdefHandler mPlaylistHandler = new NdefHandler() {
+    private NdefHandler mHttpPlaylistHandler = new NdefHandler() {
     	@Override
 		public int handleNdef(NdefMessage[] ndefMessages) {
     		// TODO: support full ndef uri specification.
-    		// TODO: support direct mime types
     		NdefRecord record = ndefMessages[0].getRecords()[0];
     		if (record.getTnf() != NdefRecord.TNF_ABSOLUTE_URI) {
     			return NDEF_PROPAGATE;
@@ -177,6 +185,29 @@ public class PocketBox extends Activity {
 			return NDEF_CONSUME;
 		}
 	};
+	
+	private NdefHandler mMimePlaylistHandler = new NdefHandler() {
+		
+		@Override
+		public int handleNdef(NdefMessage[] ndefMessages) {
+			NdefRecord record = ndefMessages[0].getRecords()[0];
+			if (record.getTnf() != NdefRecord.TNF_MIME_MEDIA) {
+				return NDEF_PROPAGATE;
+			}
+			
+			String type = new String(record.getType());
+			if ("audio/mpegurl".equals(type) || "audio/x-mpegurl".equals(type)) {
+				try {
+					InputStream byteStream = new ByteArrayInputStream(record.getPayload());
+	    			mRenderingService.getMediaRenderer().getPlaylistManager().doPlaylist(byteStream);
+	    		} catch (IOException e) {
+	    			Log.e(TAG, "Could not play playlist", e);
+	    		}
+				return NDEF_CONSUME;
+			}
+			return NDEF_PROPAGATE;
+		}
+	};
     
     private ServiceConnection mServiceConnection = new ServiceConnection() {
 	    public void onServiceConnected(ComponentName className,
@@ -186,23 +217,21 @@ public class PocketBox extends Activity {
 	        // interact with the service.  We are communicating with our
 	        // service through an IDL interface, so get a client-side
 	        // representation of that from the raw service object.
-	    	mRenderingService = ((RenderingService.LocalBinder) service).getService();
-
+	    	RenderingService.LocalBinder binder = ((RenderingService.LocalBinder) service);
+	    	mRenderingService = binder.getService();
 	        // We want to monitor the service for as long as we are
 	        // connected to it.
-	        /*
 	    	try {
 	            Message msg = Message.obtain(null,
-	                    BlueService.MSG_REGISTER_CLIENT);
+	                    RenderingService.MSG_REGISTER_CLIENT);
 	            msg.replyTo = mMessenger;
-	            mService.send(msg);
+	            binder.getMessenger().send(msg);
 	        } catch (RemoteException e) {
 	            // In this case the service has crashed before we could even
 	            // do anything with it; we can count on soon being
 	            // disconnected (and then reconnected if it can be restarted)
 	            // so there is no need to do anything here.
 	        }
-	        */
 	    	
 	    	onServiceReady();
 	    }
@@ -213,4 +242,32 @@ public class PocketBox extends Activity {
 	        mRenderingService = null;
 	    }
 	};
+
+	/**
+     * Handler of incoming messages from clients.
+     */
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+            case RenderingService.MSG_PLAYLIST_UPDATED:
+            	toast("updated playlist");
+            	break;
+            }
+        }
+    }
+
+    /**
+     * Target we publish for clients to send messages to IncomingHandler.
+     */
+    final Messenger mMessenger = new Messenger(new IncomingHandler());
+    
+    public void toast(final String text) {
+    	runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				Toast.makeText(PocketBox.this, text, Toast.LENGTH_SHORT).show();
+			}
+		});
+    }
 }
